@@ -2,8 +2,6 @@ import pandas as pd
 import streamlit as st
 import requests
 
-
-
 url = "https://datasets-server.huggingface.co/rows?dataset=camel-ai%2Fchemistry&config=default&split=train&offset=0&length=100"
 
 response = requests.get(url)
@@ -65,22 +63,19 @@ def aptitude(focus, df):
       "Solution": key,
       
       })
-      
-      if st.button('Submit'):
-          st.header("Grade your answers")
-          st.session_state = "Grade"
 
-      if st.session_state == "Grade":
-        st.table(table_data)
-        for i in range(len(answers)):
-            grade = st.selectbox(f"My answer for Question # {i + 1} was: ", ('Right', 'Wrong'), key=f"selectbox_{i}")
-            if grade == "Right":
-                grade = 1
-            else:
-                grade = 0
-            grades.append(grade)
-        
-        return grades, topics
+    st.header("Grade your answers")
+
+    st.table(table_data)
+    for i in range(len(answers)):
+        grade = st.selectbox(f"My answer for Question # {i + 1} was: ", ('', 'Right', 'Wrong'), key=f"selectbox_{i}")
+        if grade == "Right":
+            grade = 1
+        elif grade == "Wrong":
+            grade = 0
+        grades.append(grade)
+     
+    return grades, topics
 
 grades, topics = aptitude(focus, df)
 
@@ -91,34 +86,26 @@ def analyze(grades, topics):
        if grades[i] == 0:
           weak_topics.append(topics[i])
     st.session_state == "practice"
-    return weak_topics
+    
 
-weak_topics = analyze(grades, topics)
-
-def practice(weak_topics, df):
-
-  st.session_state = "practice"
-  if st.session_state == "practice":
     practice_topic = st.selectbox("Select a topic to practice: ", (weak_topics))
 
-    if st.session_state == "practice_topic":
-        st.header("Practicing " + practice_topic + " . . .")
-        proficiency = 0
-        
-        filtered_df = df[df['row.sub_topic'] == practice_topic]
-        for i in range(5):
-          st.write(filtered_df.iloc[i]['row.message_1'])  
-          answer = st.text_input("Answer: ")
-          if answer != "":
+
+    st.header("Practicing " + practice_topic + " . . .")
+    proficiency = 0
+
+    filtered_df = df[df['row.sub_topic'] == practice_topic]
+    for i in range(5):
+        st.write(filtered_df.iloc[i]['row.message_1'])  
+        answer = st.text_input("Answer: ")
+        if answer != "":
             right_answer = filtered_df.iloc[i]['row.message_2']
             st.write("Right Answer: ")
             st.write(right_answer)
             grade = st.selectbox("Grade: ", ('Right', 'Wrong'))
             if grade == "Right":
                 proficiency += 1
-        
-        if proficiency <= 2:
-            st.write("Looks like you need some more practice here . . .")
-            st.write("Check our these resources for further help: ")
 
-practice(weak_topics, df)
+    if proficiency <= 2:
+        st.write("Looks like you need some more practice here . . .")
+        st.write("Check our these resources for further help: ")
